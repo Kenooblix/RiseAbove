@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card p-4">
+    
+    <h2 class="text-center mb-4">Register</h2>
+    
+    <form method="POST" action="{{ url_for('register') }}">
+      <div style="width: 350px;">
+        <!-- Username Field -->
+        <div class="form-group mb-3">
+          <input
+            type="text"
+            id="username"
+            name="username"
+            required
+            minlength="3"
+            maxlength="20"
+          />
+          <div class="Labelline">Username</div>
+        </div>
+        
+        <!-- Password Field -->
+        <div class="form-group mb-3">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            minlength="6"
+          />
+          <div class="Labelline">Password</div>
+        </div>
+
+        <!-- Confirm password -->
+        <div class="form-group mb-3">
+          <input
+            type="password"
+            id="password-confirm"
+            name="password-confirm"
+            required
+            minlength="6"
+            />
+        <div class="Labelline">Confirm password</div>
+        </div>
+        
+        <!-- Submit Button -->
+        <button 
+          type="submit" 
+          class="btn w-100"
+        >
+          Register
+        </button>
+      </div>
+    </form>
+  </div>
+{% endblock %}

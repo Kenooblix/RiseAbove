@@ -1,0 +1,144 @@
+/* Side Navbar */
+.navbar {
+    background-color: #000000;
+    border-right: 2px solid #0fff87;
+    width: 200px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;    /* full height */
+    padding: 1rem;
+    z-index: 999;     /* ensure it's on top if needed */
+}
+
+.navbar-brand {
+    color: #0fff87 !important;
+    margin-left: 1rem;
+    margin-top: 1rem;
+}
+
+.navbar .nav-link {
+    color: #0fff87 !important;
+    font-weight: 500;
+    padding: 0.8rem 1rem;
+}
+
+.navbar .nav-link:hover {
+    background-color: #141414;
+    color: #00ffcc !important;
+}
+
+/* Main Content Area (to the right of the navbar) */
+.main-content {
+    margin-left: 200px;  /* same width as .navbar */
+    padding: 2rem;       /* some spacing around content */
+    color: #0fff87;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Add background and text colour to everything */
+body {
+    background-color: #000000;
+    color: #0fff87;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background: #0fff87;
+    border-radius: 5px;
+}
+
+.card {
+    background-color: #141414;
+    border: 2px solid #0fff87;
+}
+  
+/* Container to hold each input + label pair */
+.form-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+  
+/* Neon Inputs */
+.form-group input {
+    background-color: #000;
+    color: #0fff87;
+    border: 2px solid #0fff87;
+    width: 100%;
+    padding: 0 30px;
+    line-height: 60px;       /* Slightly smaller than 80 for better spacing */
+    border-radius: 10px;
+    transition: 0.1s ease;
+    z-index: 1;
+    box-sizing: border-box;  /* Ensures padding is calculated correctly */
+}
+  
+/* On focus or valid input, highlight the border */
+.form-group input:focus,
+.form-group input:valid {
+    border: 4px solid #0fff87;
+    outline: none; /* Remove default focus outline */
+}
+  
+/* Floating Label */
+.form-group .Labelline {
+    position: absolute;
+    pointer-events: none; /* Mouse events pass through so clicking focuses input */
+    font-size: 1.2em;
+    color: #f0ffff;
+    padding: 0 25px;
+    margin: 0 20px;
+    background-color: #000;
+    top: 10px;            /* Position label near the top inside the input */
+    left: 0;
+    line-height: 40px;    /* Label's default line-height */
+    transition: 0.2s ease;
+}
+  
+/* Shift label upwards when input is focused or valid */
+.form-group input:focus + .Labelline,
+.form-group input:valid + .Labelline {
+    color: #0fff87;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 12px;
+    transform: translate(10px, -25px) scale(0.9); /* Move and shrink */
+    z-index: 2;
+}
+
+.btn {
+    background-color: #0fff87;
+    color: #000;
+    font-weight: 600;
+}
+
+.btn:hover {
+    background-color: #141414;
+    color: #00ffcc !important;
+}
+
+label {
+    color: #0fff87;
+}
+
+h2 {
+    color: #0fff87;
+}
+
+.flashes {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    z-index: 2000;
+}
+
+.rank-badge {
+    background-color: #6c757d;
+    font-size: 1rem;
+    margin-right: 0.5rem;
+}

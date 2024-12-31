@@ -1,0 +1,320 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <h1 class="mb-4">My Skills</h1>
+
+      <!-- Add Skill Form -->
+      <div class="input-group mb-3" style="max-width: 400px;">
+        <input type="text" id="newSkillName" class="form-control" placeholder="Enter a new skill...">
+        <button id="addSkillBtn" class="btn btn-primary">Add Skill</button>
+      </div>
+
+      <ul class="list-group" id="skillsList">
+        {% for skill in skills %}
+        <li class="list-group-item d-flex align-items-center" style="margin: 1rem; padding: 1rem;">
+          <div class="flex-grow-1">
+            <h5 class="mb-1" style="display: flex; align-items: center; gap: 0.5rem;">
+              <span
+                class="badge rank-badge"
+                data-xp="{{ skill.xp }}"
+                data-skillname="{{ skill.skillname }}">
+              </span>
+              {{ skill.skillname }}
+            </h5>
+            <div class="progress" style="height: 24px;">
+              <div
+                class="progress-bar"
+                role="progressbar"
+                style="width: 0%;"
+                aria-valuenow="{{ skill.xp }}"
+                aria-valuemin="0"
+                aria-valuemax="100">
+              </div>
+            </div>
+          </div>
+
+          <!-- XP Controls -->
+          <div class="ms-3 d-flex flex-column align-items-center">
+            <button class="btn btn-sm btn-primary mb-2 addXpBtn">+1</button>
+            <button class="btn btn-sm btn-secondary subXpBtn">-1</button>
+          </div>
+
+          <!-- Delete Button -->
+          <div class="ms-3">
+            <button class="btn btn-sm btn-danger deleteSkillBtn">
+              Delete
+            </button>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <!-- Save Changes button -->
+      <button id="saveChangesBtn" class="btn btn-success mb-3">
+        Save
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+// RANK & PROGRESS LOGIC
+
+function getRankInfo(xp) {
+  const ranks = [
+    { name: "Wood", min: 0, max: 10 },
+    { name: "Iron", min: 10, max: 50 },
+    { name: "Bronze", min: 50, max: 200 },
+    { name: "Silver", min: 200, max: 800 },
+    { name: "Gold", min: 800, max: 2000 },
+    { name: "Platinum", min: 2000, max: 5000 },
+    { name: "Diamond", min: 5000, max: 10000 },
+    { name: "Master", min: 10000, max: Infinity }
+  ];
+
+  for (let r of ranks) {
+    if (xp >= r.min && xp < r.max) {
+      if (r.max === Infinity) {
+        return { rank: "Master", fraction: 1 };
+      }
+      let range = r.max - r.min;
+      let fraction = (xp - r.min) / range;
+      return { rank: r.name, fraction };
+    }
+  }
+  return { rank: "Wood", fraction: 0 };
+}
+
+function updateSkillItem(item) {
+  const badgeEl = item.querySelector(".rank-badge");
+  const progressBar = item.querySelector(".progress-bar");
+  let xp = parseInt(badgeEl.getAttribute("data-xp"), 10) || 0;
+
+  let { rank, fraction } = getRankInfo(xp);
+
+  // Update badge
+  badgeEl.textContent = rank;
+
+  // Master gradient
+  if (rank === "Master") {
+    badgeEl.style.backgroundImage = "linear-gradient(to right, cyan, lightgreen)";
+    badgeEl.style.color = "#000";
+    badgeEl.style.fontWeight = "bold";
+
+    progressBar.style.backgroundImage = "linear-gradient(to right, cyan, lightgreen)";
+  } else {
+    badgeEl.style.backgroundImage = "none";
+    badgeEl.style.color = "#fff";
+    badgeEl.style.fontWeight = "normal";
+
+    progressBar.style.backgroundImage = "none";
+    progressBar.style.backgroundColor = "#0d6efd";
+  }
+
+  // Progress bar
+  let percent = Math.floor(fraction * 100);
+  progressBar.style.width = percent + "%";
+  progressBar.setAttribute("aria-valuenow", xp.toString());
+}
+
+// DOMContentLoaded EVENT
+
+document.addEventListener("DOMContentLoaded", () => {
+  const skillItems = document.querySelectorAll("#skillsList > li.list-group-item");
+  skillItems.forEach(item => updateSkillItem(item));
+
+  // +1 XP
+  document.querySelectorAll(".addXpBtn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const parentItem = e.target.closest("li.list-group-item");
+      const badgeEl = parentItem.querySelector(".rank-badge");
+      let xp = parseInt(badgeEl.getAttribute("data-xp"), 10) || 0;
+      xp += 1;
+      badgeEl.setAttribute("data-xp", xp);
+      updateSkillItem(parentItem);
+    });
+  });
+
+  // -1 XP
+  document.querySelectorAll(".subXpBtn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const parentItem = e.target.closest("li.list-group-item");
+      const badgeEl = parentItem.querySelector(".rank-badge");
+      let xp = parseInt(badgeEl.getAttribute("data-xp"), 10) || 0;
+      xp = Math.max(0, xp - 1);
+      badgeEl.setAttribute("data-xp", xp);
+      updateSkillItem(parentItem);
+    });
+  });
+
+// save changes
+
+  const saveBtn = document.getElementById("saveChangesBtn");
+  saveBtn.addEventListener("click", () => {
+    const skillItems = document.querySelectorAll("#skillsList > li.list-group-item");
+    let updatedData = [];
+    skillItems.forEach(item => {
+      const badgeEl = item.querySelector(".rank-badge");
+      const skillname = badgeEl.getAttribute("data-skillname");
+      let xp = parseInt(badgeEl.getAttribute("data-xp"), 10) || 0;
+      updatedData.push({ skillname, xp });
+    });
+
+    fetch("{{ url_for('save_xp') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ skills: updatedData })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.message) {
+        alert("XP saved!");
+      } else {
+        alert("Error: " + JSON.stringify(data));
+      }
+    })
+    .catch(err => alert("Error saving XP: " + err));
+  });
+
+// ADD SKILL
+
+  const addSkillBtn = document.getElementById("addSkillBtn");
+  addSkillBtn.addEventListener("click", () => {
+    console.log("Add Skill button clicked!");
+    const input = document.getElementById("newSkillName");
+    const skillname = input.value.trim();
+    if (!skillname) {
+      alert("Please enter a skill name.");
+      return;
+    }
+
+    fetch("{{ url_for('add_skill') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ skillname })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.message) {
+        // Skill created successfully
+        const newSkill = data.skill;
+        // Dynamically create a new <li> item
+        const li = document.createElement("li");
+        li.className = "list-group-item d-flex align-items-center";
+        li.style.margin = "1rem";
+        li.style.padding = "1rem";
+        li.innerHTML = `
+          <div class="flex-grow-1">
+            <h5 class="mb-1" style="display: flex; align-items: center; gap: 0.5rem;">
+              <span
+                class="badge rank-badge"
+                data-xp="${newSkill.xp}"
+                data-skillname="${newSkill.skillname}"
+              ></span>
+              ${newSkill.skillname}
+            </h5>
+            <div class="progress" style="height: 24px;">
+              <div
+                class="progress-bar"
+                role="progressbar"
+                style="width: 0%;"
+                aria-valuenow="${newSkill.xp}"
+                aria-valuemin="0"
+                aria-valuemax="100">
+              </div>
+            </div>
+          </div>
+          <div class="ms-3 d-flex flex-column align-items-center">
+            <button class="btn btn-sm btn-primary mb-2 addXpBtn">+1</button>
+            <button class="btn btn-sm btn-secondary subXpBtn">-1</button>
+          </div>
+          <div class="ms-3">
+            <button class="btn btn-sm btn-danger deleteSkillBtn">Delete</button>
+          </div>
+        `;
+        // Add it to the list
+        document.getElementById("skillsList").appendChild(li);
+
+        // Reset input
+        input.value = "";
+
+        // Re-attach event listeners
+        li.querySelector(".addXpBtn").addEventListener("click", e => {
+          const parentItem = e.target.closest("li.list-group-item");
+          const badgeEl = parentItem.querySelector(".rank-badge");
+          let xp = parseInt(badgeEl.getAttribute("data-xp"), 10) || 0;
+          xp += 1;
+          badgeEl.setAttribute("data-xp", xp);
+          updateSkillItem(parentItem);
+        });
+
+        li.querySelector(".subXpBtn").addEventListener("click", e => {
+          const parentItem = e.target.closest("li.list-group-item");
+          const badgeEl = parentItem.querySelector(".rank-badge");
+          let xp = parseInt(badgeEl.getAttribute("data-xp"), 10) || 0;
+          xp = Math.max(0, xp - 1);
+          badgeEl.setAttribute("data-xp", xp);
+          updateSkillItem(parentItem);
+        });
+
+        li.querySelector(".deleteSkillBtn").addEventListener("click", e => {
+          const parentItem = e.target.closest("li.list-group-item");
+          const badgeEl = parentItem.querySelector(".rank-badge");
+          const skillname = badgeEl.getAttribute("data-skillname");
+          if (confirm(`Are you sure you want to delete the skill "${skillname}"?`)) {
+            deleteSkill(parentItem, skillname);
+          }
+        });
+
+        // Update the new item’s UI
+        updateSkillItem(li);
+      } else {
+        alert("Error adding skill: " + data.error);
+      }
+    })
+    .catch(err => alert("Error: " + err));
+  });
+
+// DELETE SKILL
+
+  document.querySelectorAll(".deleteSkillBtn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const parentItem = e.target.closest("li.list-group-item");
+      const badgeEl = parentItem.querySelector(".rank-badge");
+      const skillname = badgeEl.getAttribute("data-skillname");
+
+      if (confirm(`Are you sure you want to delete the skill "${skillname}"?`)) {
+        deleteSkill(parentItem, skillname);
+      }
+    });
+  });
+
+  function deleteSkill(itemEl, skillname) {
+    fetch("{{ url_for('delete_skill') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ skillname })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.message) {
+        // Remove the <li> element from DOM
+        itemEl.remove();
+        alert("Skill deleted.");
+      } else {
+        alert("Error deleting skill: " + JSON.stringify(data));
+      }
+    })
+    .catch(err => alert("Error: " + err));
+  }
+
+});
+</script>
+{% endblock %}
